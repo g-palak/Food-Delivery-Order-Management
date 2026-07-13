@@ -62,6 +62,10 @@ public class AssignmentServiceImpl implements AssignmentService {
             );
         }
 
+        if (!assignment.getDeliveryPartner().getId().equals(currentUserId())) {
+            throw new RuntimeException("Assignment does not belong to current partner");
+        }
+
         assignment.setAssignmentStatus(AssignmentStatus.ACCEPTED);
         assignment.setUpdatedAt(java.time.LocalDateTime.now());
         Assignment saved = assignmentRepository.save(assignment);
@@ -93,6 +97,10 @@ public class AssignmentServiceImpl implements AssignmentService {
                     assignment.getAssignmentStatus(),
                     AssignmentStatus.REJECTED
             );
+        }
+
+        if (!assignment.getDeliveryPartner().getId().equals(currentUserId())) {
+            throw new RuntimeException("Assignment does not belong to current partner");
         }
 
         assignment.setAssignmentStatus(AssignmentStatus.REJECTED);
@@ -131,6 +139,68 @@ public class AssignmentServiceImpl implements AssignmentService {
         assignment.setAssignmentStatus(AssignmentStatus.PENDING);
         assignment.setUpdatedAt(java.time.LocalDateTime.now());
         assignmentRepository.save(assignment);
+    }
+
+    @Override
+    @Transactional
+    public AssignmentResponse pickupOrder(Long orderId) {
+        Long partnerId = currentUserId();
+
+        Optional<Assignment> opt = assignmentRepository.findByOrderIdAndAssignmentStatus(orderId, AssignmentStatus.ACCEPTED);
+        Assignment assignment = opt.orElseGet(() ->
+                assignmentRepository.findByOrderIdAndAssignmentStatus(orderId, AssignmentStatus.PENDING)
+                        .orElseThrow(() -> new RuntimeException("Assignment not found for order: " + orderId))
+        );
+
+        if (!assignment.getDeliveryPartner().getId().equals(partnerId)) {
+            throw new RuntimeException("Assignment does not belong to current partner");
+        }
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        if (order.getOrderStatus() != com.fooddelivery.enums.OrderStatus.READY) {
+            throw new IllegalOrderStateTransitionException(
+                    orderId,
+                    order.getOrderStatus(),
+                    com.fooddelivery.enums.OrderStatus.OUT_OF_DELIVERY
+            );
+        }
+
+        order.setOrderStatus(com.fooddelivery.enums.OrderStatus.OUT_OF_DELIVERY);
+        orderRepository.save(order);
+        return toResponse(assignmentRepository.save(assignment));
+    }
+
+    @Override
+    @Transactional
+    public AssignmentResponse deliverOrder(Long orderId) {
+        Long partnerId = currentUserId();
+
+        Optional<Assignment> opt = assignmentRepository.findByOrderIdAndAssignmentStatus(orderId, AssignmentStatus.ACCEPTED);
+        Assignment assignment = opt.orElseGet(() ->
+                assignmentRepository.findByOrderIdAndAssignmentStatus(orderId, AssignmentStatus.PENDING)
+                        .orElseThrow(() -> new RuntimeException("Assignment not found for order: " + orderId))
+        );
+
+        if (!assignment.getDeliveryPartner().getId().equals(partnerId)) {
+            throw new RuntimeException("Assignment does not belong to current partner");
+        }
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        if (order.getOrderStatus() != com.fooddelivery.enums.OrderStatus.OUT_OF_DELIVERY) {
+            throw new IllegalOrderStateTransitionException(
+                    orderId,
+                    order.getOrderStatus(),
+                    com.fooddelivery.enums.OrderStatus.DELIVERED
+            );
+        }
+
+        order.setOrderStatus(com.fooddelivery.enums.OrderStatus.DELIVERED);
+        orderRepository.save(order);
+        return toResponse(assignmentRepository.save(assignment));
     }
 
     private Long currentUserId() {

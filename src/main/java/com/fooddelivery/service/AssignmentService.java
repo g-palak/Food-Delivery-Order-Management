@@ -35,4 +35,18 @@ public interface AssignmentService {
      * <p>This is an internal service hook, not directly exposed through controllers.</p>
      */
     void assignDeliveryPartnerIfAvailable(Long orderId);
+
+    /**
+     * Delivery partner confirms pickup of an order.
+     *
+     * <p>Validates assignment ownership, assignment state, and order state.</p>
+     */
+    AssignmentResponse pickupOrder(Long orderId);
+
+    /**
+     * Delivery partner marks order as delivered.
+     *
+     * <p>Validates assignment ownership and current order state.</p>
+     */
+    AssignmentResponse deliverOrder(Long orderId);
 }
