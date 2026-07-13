@@ -163,96 +163,88 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public OrderResponse acceptOrder(Long id) {
-        Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
-
-        if (order.getOrderStatus() != OrderStatus.PLACED) {
-            throw new IllegalOrderStateTransitionException(id, order.getOrderStatus(), OrderStatus.ACCEPTED);
-        }
-
+        Order order = requireOrder(id);
+        ensureStatus(order, OrderStatus.PLACED, OrderStatus.ACCEPTED);
         order.setOrderStatus(OrderStatus.ACCEPTED);
         return toResponse(orderRepository.save(order));
     }
 
     @Override
+    @Transactional
     public OrderResponse rejectOrder(Long id) {
-        Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
-
-        if (order.getOrderStatus() != OrderStatus.PLACED) {
-            throw new IllegalOrderStateTransitionException(id, order.getOrderStatus(), OrderStatus.REJECTED);
-        }
-
+        Order order = requireOrder(id);
+        ensureStatus(order, OrderStatus.PLACED, OrderStatus.REJECTED);
         order.setOrderStatus(OrderStatus.REJECTED);
         return toResponse(orderRepository.save(order));
     }
 
     @Override
+    @Transactional
     public OrderResponse preparingOrder(Long id) {
-        Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
-
-        if (order.getOrderStatus() != OrderStatus.ACCEPTED) {
-            throw new IllegalOrderStateTransitionException(id, order.getOrderStatus(), OrderStatus.PREPARING);
-        }
-
+        Order order = requireOrder(id);
+        ensureStatus(order, OrderStatus.ACCEPTED, OrderStatus.PREPARING);
         order.setOrderStatus(OrderStatus.PREPARING);
         return toResponse(orderRepository.save(order));
     }
 
     @Override
+    @Transactional
     public OrderResponse readyOrder(Long id) {
-        Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
-
-        if (order.getOrderStatus() != OrderStatus.PREPARING) {
-            throw new IllegalOrderStateTransitionException(id, order.getOrderStatus(), OrderStatus.READY);
-        }
-
+        Order order = requireOrder(id);
+        ensureStatus(order, OrderStatus.PREPARING, OrderStatus.READY);
         order.setOrderStatus(OrderStatus.READY);
         return toResponse(orderRepository.save(order));
     }
 
     @Override
+    @Transactional
     public OrderResponse pickupOrder(Long id) {
-        Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
-
-        if (order.getOrderStatus() != OrderStatus.READY) {
-            throw new IllegalOrderStateTransitionException(id, order.getOrderStatus(), OrderStatus.OUT_OF_DELIVERY);
-        }
-
+        Order order = requireOrder(id);
+        ensureStatus(order, OrderStatus.READY, OrderStatus.OUT_OF_DELIVERY);
         order.setOrderStatus(OrderStatus.OUT_OF_DELIVERY);
         return toResponse(orderRepository.save(order));
     }
 
     @Override
+    @Transactional
     public OrderResponse deliverOrder(Long id) {
-        Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
-
-        if (order.getOrderStatus() != OrderStatus.OUT_OF_DELIVERY) {
-            throw new IllegalOrderStateTransitionException(id, order.getOrderStatus(), OrderStatus.DELIVERED);
-        }
-
+        Order order = requireOrder(id);
+        ensureStatus(order, OrderStatus.OUT_OF_DELIVERY, OrderStatus.DELIVERED);
         order.setOrderStatus(OrderStatus.DELIVERED);
         return toResponse(orderRepository.save(order));
     }
 
     @Override
+    @Transactional
     public OrderResponse cancelOrder(Long id) {
-        throw new UnsupportedOperationException("Implement customer cancellation");
+        Order order = requireOrder(id);
+        ensureStatus(order, OrderStatus.PLACED, OrderStatus.CANCELLED);
+        order.setOrderStatus(OrderStatus.CANCELLED);
+        return toResponse(orderRepository.save(order));
     }
 
     @Override
-    public List<OrderResponse> getCustomerOrders(Long customerId) {
-        throw new UnsupportedOperationException("Implement customer order history");
+    @Transactional
+    public OrderResponse getCustomerOrders(Long customerId) {
+        return null;
     }
 
     @Override
     public List<OrderResponse> getMyOrders() {
         throw new UnsupportedOperationException("Implement with authenticated principal");
+    }
+
+    private Order requireOrder(Long id) {
+        return orderRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + id));
+    }
+
+    private void ensureStatus(Order order, OrderStatus expected, OrderStatus next) {
+        if (order.getOrderStatus() != expected) {
+            throw new IllegalOrderStateTransitionException(order.getId(), order.getOrderStatus(), next);
+        }
     }
 
     private OrderResponse toResponse(Order order) {
