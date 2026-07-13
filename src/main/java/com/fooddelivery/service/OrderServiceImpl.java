@@ -164,32 +164,80 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderResponse acceptOrder(Long id) {
-        throw new UnsupportedOperationException("Implement state transition");
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        if (order.getOrderStatus() != OrderStatus.PLACED) {
+            throw new IllegalOrderStateTransitionException(id, order.getOrderStatus(), OrderStatus.ACCEPTED);
+        }
+
+        order.setOrderStatus(OrderStatus.ACCEPTED);
+        return toResponse(orderRepository.save(order));
     }
 
     @Override
     public OrderResponse rejectOrder(Long id) {
-        throw new UnsupportedOperationException("Implement state transition");
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        if (order.getOrderStatus() != OrderStatus.PLACED) {
+            throw new IllegalOrderStateTransitionException(id, order.getOrderStatus(), OrderStatus.REJECTED);
+        }
+
+        order.setOrderStatus(OrderStatus.REJECTED);
+        return toResponse(orderRepository.save(order));
     }
 
     @Override
     public OrderResponse preparingOrder(Long id) {
-        throw new UnsupportedOperationException("Implement state transition");
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        if (order.getOrderStatus() != OrderStatus.ACCEPTED) {
+            throw new IllegalOrderStateTransitionException(id, order.getOrderStatus(), OrderStatus.PREPARING);
+        }
+
+        order.setOrderStatus(OrderStatus.PREPARING);
+        return toResponse(orderRepository.save(order));
     }
 
     @Override
     public OrderResponse readyOrder(Long id) {
-        throw new UnsupportedOperationException("Implement state transition");
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        if (order.getOrderStatus() != OrderStatus.PREPARING) {
+            throw new IllegalOrderStateTransitionException(id, order.getOrderStatus(), OrderStatus.READY);
+        }
+
+        order.setOrderStatus(OrderStatus.READY);
+        return toResponse(orderRepository.save(order));
     }
 
     @Override
     public OrderResponse pickupOrder(Long id) {
-        throw new UnsupportedOperationException("Implement state transition");
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        if (order.getOrderStatus() != OrderStatus.READY) {
+            throw new IllegalOrderStateTransitionException(id, order.getOrderStatus(), OrderStatus.OUT_OF_DELIVERY);
+        }
+
+        order.setOrderStatus(OrderStatus.OUT_OF_DELIVERY);
+        return toResponse(orderRepository.save(order));
     }
 
     @Override
     public OrderResponse deliverOrder(Long id) {
-        throw new UnsupportedOperationException("Implement state transition");
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        if (order.getOrderStatus() != OrderStatus.OUT_OF_DELIVERY) {
+            throw new IllegalOrderStateTransitionException(id, order.getOrderStatus(), OrderStatus.DELIVERED);
+        }
+
+        order.setOrderStatus(OrderStatus.DELIVERED);
+        return toResponse(orderRepository.save(order));
     }
 
     @Override
