@@ -13,6 +13,7 @@ public record OrderResponse(
         OrderStatus orderStatus,
         BigDecimal totalPrice,
         PaymentStatus paymentStatus,
+        String paymentMethod,
         LocalDateTime createdAt,
         LocalDateTime paymentDoneAt,
         List<OrderItemResponse> items
