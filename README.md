@@ -49,6 +49,7 @@ Orders
 - totalPrice
 - paymentStatus
 - createdAt
+- paymentDoneAt
 
 OrderItem
 - id
@@ -81,7 +82,7 @@ Notifications
 - notificationType
 - notificationStatus
 - message
-- sentAt (Assumption: createdAt = sentAt)
+- createdAt (Assumption: createdAt = sentAt)
   
 NotificationType
 - (Enum: value: order_placed, order_accepted, order_preparing, order_picked_up, order_delivered)
@@ -145,7 +146,7 @@ Customer Access:
 - GET /customers/me/orders
 
 ### ReviewController
-Customer Access:
+General user Access:
 - GET /reviews  (filtering can be done based on reviewee id)
 - POST /reviews
 
@@ -160,17 +161,20 @@ Restaurant Access:
 - PATCH /orders/{id}/preparing
 - PATCH /orders/{id}/ready
 
+DeliveryPartner Access:
+- PATCH /orders/{id}/pickup
+- PATCH /orders/{id}/deliver
+
 ### AssignmentController:
 DeliveryPartner Access:
-- PATCH /assignments/{id}/accept  
-- PATCH /assignments/{id}/pickup
-- PATCH /assignments/{id}/deliver
+- GET /assignments
+- PATCH /assignments/{id}/accept
 
 ### Extra services
-- AssignmentService: will also contain automatic/asynchronous assignment
-- NotificationService
-- InventoryService
-- PaymentService
+- AssignmentService: will also contain automatic assignment and handle concurrent partner acceptance
+- NotificationService: for asynchronous update notifications
+- InventoryService:  to manage item inventory
+- PaymentService: to handle payment processing
 
 ## Repositories:
 - CityRepository
