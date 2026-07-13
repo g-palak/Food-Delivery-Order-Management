@@ -37,6 +37,9 @@ public class Order {
 
     private LocalDateTime paymentDoneAt;
 
+    @Column(length = 30)
+    private String paymentMethod;
+
     // Order -> Customer
     @ManyToOne
     @JoinColumn(name = "customer_id", nullable = false)
