@@ -4,7 +4,6 @@ import com.fooddelivery.dto.request.UpdateUserRequest;
 import com.fooddelivery.dto.request.UserRequest;
 import com.fooddelivery.dto.response.OrderResponse;
 import com.fooddelivery.dto.response.UserResponse;
-import com.fooddelivery.service.CustomerService;
 import com.fooddelivery.service.OrderService;
 import com.fooddelivery.service.UserService;
 import jakarta.validation.Valid;

@@ -1,7 +1,6 @@
 package com.fooddelivery.controller;
 
 import com.fooddelivery.dto.request.PlaceOrderRequest;
-import com.fooddelivery.dto.response.AssignmentResponse;
 import com.fooddelivery.dto.response.OrderResponse;
 import com.fooddelivery.service.AssignmentService;
 import com.fooddelivery.service.OrderService;
